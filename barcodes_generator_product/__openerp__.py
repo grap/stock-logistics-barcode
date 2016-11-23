@@ -26,7 +26,5 @@
     'demo': [
         'demo/res_users.xml',
         'demo/barcode_rule.xml',
-        'demo/product.xml',
-        'demo/function.xml',
     ],
 }

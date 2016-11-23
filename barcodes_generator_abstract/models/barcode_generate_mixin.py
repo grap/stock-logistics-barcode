@@ -33,6 +33,7 @@ class BarcodeGenerateMixin(orm.AbstractModel):
 
     # View Section
     def generate_base(self, cr, uid, ids, context=None):
+        sequence_obj = self.pool['ir.sequence']
         for item in self.browse(cr, uid, ids, context=context):
             if item.generate_type != 'sequence':
                 raise osv.except_osv(_('Error'), _(
@@ -40,6 +41,10 @@ class BarcodeGenerateMixin(orm.AbstractModel):
                     " 'Generate Type' set to 'Base managed by Sequence'"))
             else:
                 # TODO
+                self.write(cr, uid, [item.id], {
+                    'barcode_base': sequence_obj.next_by_id(
+                        cr, uid, item.barcode_rule_id.sequence_id.id,
+                        context=context)}, context=context)
                 pass
 #                item.barcode_base =\
 #                    item.barcode_rule_id.sequence_id.next_by_id()
@@ -55,7 +60,7 @@ class BarcodeGenerateMixin(orm.AbstractModel):
                 barcode_class = barcode.get_barcode_class(
                     item.barcode_rule_id.encoding)
                 self.write(cr, uid, [item.id], {
-                    'barcode': barcode_class(custom_code)}, context=context)
+                    'ean13': barcode_class(custom_code)}, context=context)
 
     # Custom Section
     def _get_custom_barcode(self, cr, uid, item, context=None):
