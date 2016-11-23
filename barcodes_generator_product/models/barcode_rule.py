@@ -4,11 +4,16 @@
 # @author: Sylvain LE GAL (https://twitter.com/legalsylvain)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from openerp import models, fields
+from openerp.osv import fields, orm
 
 
-class BarcodeRule(models.Model):
+class BarcodeRule(orm.Model):
     _inherit = 'barcode.rule'
 
-    generate_model = fields.Selection(
-        selection_add=[('product.product', 'Products')])
+    _columns = {
+        'generate_model': fields.selection(
+            string='Generate Model',
+            selection=[('product.product', 'Products')],
+            help="if 'Generate Type' is set, mention the model related to this"
+            " rule."),
+    }

@@ -6,9 +6,8 @@
 
 import logging
 
-from openerp import models, fields, api, exceptions, _
-
-from .barcode_rule import _GENERATE_TYPE
+from openerp.osv import osv, fields, orm
+from openerp.tools.translate import _
 
 _logger = logging.getLogger(__name__)
 
@@ -19,46 +18,47 @@ except ImportError:
     barcode = None
 
 
-class BarcodeGenerateMixin(models.AbstractModel):
+class BarcodeGenerateMixin(orm.AbstractModel):
     _name = 'barcode.generate.mixin'
 
     # Column Section
-    barcode_rule_id = fields.Many2one(
-        string='Barcode Rule', comodel_name='barcode.rule')
-
-    barcode_base = fields.Integer(string='Barcode Base')
-
-    generate_type = fields.Selection(
-        string='Generate Type', selection=_GENERATE_TYPE, readonly=True,
-        related='barcode_rule_id.generate_type')
+    _columns = {
+        'barcode_rule_id': fields.many2one(
+            'barcode.rule', string='Barcode Rule'),
+        'barcode_base': fields.integer(string='Barcode Base'),
+        'generate_type': fields.related(
+            'barcode_rule_id', 'generate_type', string='Generate Type',
+            type='selection', readonly=True),
+    }
 
     # View Section
-    @api.multi
-    def generate_base(self):
-        for item in self:
+    def generate_base(self, cr, uid, ids, context=None):
+        for item in self.browse(cr, uid, ids, context=context):
             if item.generate_type != 'sequence':
-                raise exceptions.UserError(_(
+                raise osv.except_osv(_('Error'), _(
                     "Generate Base can be used only with barcode rule with"
                     " 'Generate Type' set to 'Base managed by Sequence'"))
             else:
-                item.barcode_base =\
-                    item.barcode_rule_id.sequence_id.next_by_id()
+                # TODO
+                pass
+#                item.barcode_base =\
+#                    item.barcode_rule_id.sequence_id.next_by_id()
 
-    @api.multi
-    def generate_barcode(self):
-        for item in self:
+    def generate_barcode(self, cr, uid, ids, context=None):
+        for item in self.browse(cr, uid, ids, context=context):
             padding = item.barcode_rule_id.padding
             str_base = str(item.barcode_base).rjust(padding, '0')
-            custom_code = self._get_custom_barcode(item)
+            custom_code = self._get_custom_barcode(
+                cr, uid, item, context=context)
             if custom_code:
                 custom_code = custom_code.replace('.' * padding, str_base)
                 barcode_class = barcode.get_barcode_class(
                     item.barcode_rule_id.encoding)
-                item.barcode = barcode_class(custom_code)
+                self.write(cr, uid, [item.id], {
+                    'barcode': barcode_class(custom_code)}, context=context)
 
     # Custom Section
-    @api.model
-    def _get_custom_barcode(self, item):
+    def _get_custom_barcode(self, cr, uid, item, context=None):
         """
             if the pattern is '23.....{NNNDD}'
             this function will return '23.....00000'
@@ -72,12 +72,11 @@ class BarcodeGenerateMixin(models.AbstractModel):
         custom_code = item.barcode_rule_id.pattern
         custom_code = custom_code.replace('{', '').replace('}', '')
         custom_code = custom_code.replace(
-            'D', self._get_replacement_char('D'))
+            'D', self._get_replacement_char(cr, uid, 'D', context=context))
         return custom_code.replace(
-            'N', self._get_replacement_char('N'))
+            'N', self._get_replacement_char(cr, uid, 'N', context=context))
 
-    @api.model
-    def _get_replacement_char(self, char):
+    def _get_replacement_char(self, cr, uid, char, context=None):
         """
         Can be overload by inheritance
         Define wich character will be used instead of the 'N' or the 'D'

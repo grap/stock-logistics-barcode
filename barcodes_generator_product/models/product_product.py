@@ -4,9 +4,9 @@
 # @author: Sylvain LE GAL (https://twitter.com/legalsylvain)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from openerp import models
+from openerp.osv import orm
 
 
-class ProductProduct(models.Model):
+class ProductProduct(orm.Model):
     _name = 'product.product'
     _inherit = ['product.product', 'barcode.generate.mixin']
