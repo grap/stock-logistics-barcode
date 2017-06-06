@@ -25,11 +25,35 @@ class BarcodeGenerateMixin(orm.AbstractModel):
     _columns = {
         'barcode_rule_id': fields.many2one(
             'barcode.rule', string='Barcode Rule'),
-        'barcode_base': fields.integer(string='Barcode Base'),
+        'barcode_base': fields.integer(string='Barcode Base', ),
         'generate_type': fields.related(
             'barcode_rule_id', 'generate_type', string='Generate Type',
-            type='selection', readonly=True),
+            type='char'),
     }
+
+    _defaults = {
+        'barcode_base': 0,
+    }
+
+    def copy(self, cr, uid, id, default=None, context=None):
+        if default is None:
+            default = {}
+        default['barcode_base'] = 0
+        print default
+        return super(BarcodeGenerateMixin, self).copy(
+            cr, uid, id, default, context)
+
+    # View Section
+    def onchange_barcode_rule_id(
+            self, cr, uid, ids, barcode_rule_id, context=None):
+        barcode_rule_obj = self.pool['barcode.rule']
+        if not barcode_rule_id:
+            return {'value': {'generate_type':'no'}}
+        else:
+            barcode_rule = barcode_rule_obj.browse(
+                cr, uid, barcode_rule_id, context=context)
+            return {'value': {'generate_type': barcode_rule.generate_type}}
+
 
     # View Section
     def generate_base(self, cr, uid, ids, context=None):

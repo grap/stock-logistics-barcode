@@ -15,11 +15,12 @@ License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
             <field name="default_code" position="before">
                 <field name="barcode_rule_id"
                     domain="[('generate_model', '=', 'product.product')]"
-                    groups="barcodes_generator_abstract.generate_barcode" colspan="2"/>
-                <field name="generate_type" invisible="1" />
+                    groups="barcodes_generator_abstract.generate_barcode" colspan="2"
+                    on_change="onchange_barcode_rule_id(barcode_rule_id)"/>
+                <field name="generate_type" invisible="1"/>
                 <field name="barcode_base" attrs="{
                     'invisible': [('barcode_rule_id', '=', False)],
-                    'readonly': True}"
+                    'readonly': [('generate_type', '!=', 'manual')]}"
                     groups="barcodes_generator_abstract.generate_barcode" colspan="2"/>
                 <button name="generate_base" type="object" string="Generate Base (Using Sequence)" attrs="{'invisible': ['|',
                     ('generate_type', '!=', 'sequence'),
