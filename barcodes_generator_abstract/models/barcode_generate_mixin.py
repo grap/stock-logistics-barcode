@@ -25,10 +25,10 @@ class BarcodeGenerateMixin(orm.AbstractModel):
     _columns = {
         'barcode_rule_id': fields.many2one(
             'barcode.rule', string='Barcode Rule'),
-        'barcode_base': fields.integer(string='Barcode Base', ),
+        'barcode_base': fields.integer(string='Barcode Base'),
         'generate_type': fields.related(
             'barcode_rule_id', 'generate_type', string='Generate Type',
-            type='char'),
+            type='char', readonly=True),
     }
 
     _defaults = {
